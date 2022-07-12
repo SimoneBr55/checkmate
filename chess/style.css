@@ -1,0 +1,60 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: darkslategrey;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+    height: 100vh;
+    width: 100vw;
+}
+
+.casella {
+    font-size: 400%;
+    margin: 0;
+    font-weight: 400;
+}
+
+.pezzo {
+    height: 100px;
+}
+
+.under {
+    background-color: burlywood;
+    width: 950px;
+    height: 900px;
+    align-items: center;
+    display: flex;
+    justify-content: center;
+}
+
+.scacchiera {
+    cursor: pointer;
+    background-color: burlywood;
+    width: 800px;
+    height: 800px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.bianco {
+    background-color: white;
+    height: 100px;
+    width: 100px;
+    align-items: center;
+    display: flex;
+    justify-content: center;
+}
+
+.nero {
+    background-color: green;
+    width: 100px;
+    height: 100px;
+    align-items: center;
+    display: flex;
+    justify-content: center;
+}
