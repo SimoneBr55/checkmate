@@ -29,6 +29,7 @@ body {
 
 .pezzo {
     padding-top: 2%;
+    user-select: none;
 }
 
 .under {
@@ -59,7 +60,7 @@ body {
 }
 
 .nero {
-    background-color: green;
+    background-color: #0080008a;
     width: 100px;
     height: 100px;
     align-items: center;
