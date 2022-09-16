@@ -1,4 +1,4 @@
-//MANCA: re, fineGioco      BUG: i pezzi possono muoversi anche se il proprio re dopo la mossa rimane sotto scacco;
+//MANCA: fineGioco      BUG: i pezzi possono muoversi anche se il proprio re dopo la mossa rimane sotto scacco;
 
 let selectAll = document.querySelectorAll('.casella');
 let nuovoPezzo = document.querySelectorAll('.pezzo');
@@ -6,22 +6,39 @@ let last;
 let t = 0;
 let click = 0;
 
-function moove() {
+function moove() { //core del codice, un ciclo 'infinito' che termina solo alla fine del gioco
+    let pezzoPrecedenteColoreOpposto;
     let legale = false;
     let lastCasella;
     let lastId;
     let aChiSta;
-    for(let i = 0; i < selectAll.length; i++){
-        selectAll[i].addEventListener('click', function selectPiece(){
+    let onlyMove = false;
+    for(let i = 0; i < selectAll.length; i++) {
+        selectAll[i].addEventListener('click', function selectPiece() {
+            //if(isCheck(aChiSta)) onlyMove = true;  se è scacco solo il re può muoversi oppure un pezzo può mettersi in mezzo
             if(click == 0) aChiSta = turno(t);
-            if (aChiSta == "B") { //turno del bianco
+            if (aChiSta == "B") {   // turno del bianco
                 if (click >= 1) {
-                    legale = isLegalMove(nuovoPezzo[i], last, "B");
-                    if(legale) changePieceId(event, "B", lastId, lastCasella);
-                    lastCasella.className = lastCasella.className.slice(0, 14);
+                    if(onlyMove) {
+                        if(canBlock(nuovoPezzo[i], pezzoPrecedenteColoreOpposto) && canEscape(nuovoPezzo[i], last)) {
+                            debugger
+                            eseguiMossa(nuovoPezzo[i], last);
+                            changePieceId(event, "B", lastId, lastCasella);
+                            lastCasella.className = lastCasella.className.slice(0, 14);
+                            onlyMove = false;
+                        } else {
+                            click = 0;
+                            lastCasella.className = lastCasella.className.slice(0, 14);
+                            onlyMove = false;
+                        }
+                    } else {
+                        legale = isLegalMove(nuovoPezzo[i], last, "B");
+                        if(legale) changePieceId(event, "B", lastId, lastCasella);
+                        lastCasella.className = lastCasella.className.slice(0, 14);
+                    }
                 } else {    //seleziona il pezzo bianco
                     for (let pez of mapPezziBianchi.values()) {
-                        try{
+                        try {
                             if(event.srcElement.childNodes[1].id == pez) {
                                 lastId = pez
                                 click++;
@@ -29,7 +46,7 @@ function moove() {
                                 lastCasella = event.target;
                             }
                         } catch(e) {}
-                        try{
+                        try {
                             if(event.srcElement.id == pez) {
                                 lastId = pez
                                 click++;
@@ -45,6 +62,13 @@ function moove() {
                     legale = isLegalMove(nuovoPezzo[i], last, "N");
                     if(legale) changePieceId(event, "N", lastId, lastCasella);
                     lastCasella.className = lastCasella.className.slice(0, 14);
+                    if(isCheck(nonAChiSta(aChiSta))) {
+                        onlyMove = true;
+                        //canEscape();
+                        //canBlock();
+                        // se entrambe sono vere avviene fineGioco
+                    }
+                    pezzoPrecedenteColoreOpposto = nuovoPezzo[i];
                 } else {    //seleziona il pezzo nero
                     for (let pez of mapPezziNeri.values()) {
                         try{
@@ -71,6 +95,45 @@ function moove() {
     }
 }
 
+function nonAChiSta(colore) {
+    let col = Object.assign(colore)
+    if(colore == "B") col = "N";
+    else col = "B";
+    return col;
+}
+
+function canEscape(casellaSelezionata, pezzo) {
+    let b = false;
+    if(fromPezToMap(pezzo)[0].slice(0, 1) == "r" &&
+    kingMoovement(casellaSelezionata, pezzo)) {
+        b = true;
+    }
+    return b;
+}
+
+function canBlock(casellaSelezionata, pezzoColoreOpposto) {
+    let b = false;
+    if(movimentoOrizzontale(pezzoColoreOpposto, casellaSelezionata) ||
+    movimentoObliquo(pezzoColoreOpposto, casellaSelezionata) ||
+    movimentoVerticale(pezzoColoreOpposto, casellaSelezionata)) {
+        b = true;
+    }
+    return b;
+}
+
+function isCheck(colore) { // Controlla se il re è sotto scacco
+    let b = false;
+    if(colore == "B") {
+        let king = document.getElementById(mapPezziBianchi.get("reB"))
+        if(isMenaced(king, colore)) {
+            debugger
+            b = true
+        }
+    }
+    return b;
+}
+
+// Gestisce il tipo di pezzo selezionato, si occupa del riconoscimento e delle regole di movimento.
 function isLegalMove(casellaSelezionata, lastPezzo, colore) {
     if(colore == "B") piece = searchPezzoBiancoPassato(lastPezzo, "B");
     else piece = searchPezzoBiancoPassato(lastPezzo, "N") 
@@ -146,26 +209,16 @@ function isLegalMove(casellaSelezionata, lastPezzo, colore) {
                 }
             }
             break;
-            case "c":
-                let casel = piece[1].slice(0, 1);
-                let n = alfabeto.indexOf(casel);
-                    if(((parseInt(piece[1].slice(1)) + 2 == parseInt(casellaSelezionata.id.slice(1)) ||
-                    parseInt(piece[1].slice(1)) - 2 == parseInt(casellaSelezionata.id.slice(1))) && 
-                    (alfabeto[n + 1] == casellaSelezionata.id.slice(0, 1) ||
-                    alfabeto[n - 1] == casellaSelezionata.id.slice(0, 1)) ||
-                    (alfabeto[n + 2] == casellaSelezionata.id.slice(0, 1) ||
-                    alfabeto[n - 2] == casellaSelezionata.id.slice(0, 1)) &&
-                    (parseInt(piece[1].slice(1)) + 1 == parseInt(casellaSelezionata.id.slice(1)) ||
-                    parseInt(piece[1].slice(1)) - 1 == parseInt(casellaSelezionata.id.slice(1)))) &&
-                    nonPuoiMangiareTuoiAmici(casellaSelezionata, lastPezzo)) {
-                        eseguiMossa(casellaSelezionata, lastPezzo);
+            case "c": // Regole del cavallo
+                if(cavalloMovement(piece, casellaSelezionata) && nonPuoiMangiareTuoiAmici(casellaSelezionata, lastPezzo)) {
+                    eseguiMossa(casellaSelezionata, lastPezzo);
                         b = true
-                    } else {
+                } else {
                         click = 0;
                         b = false;
-                    }
+                }
             break;
-            case "t":
+            case "t": // Regole della torre
                 if(movimentoVerticale(lastPezzo, casellaSelezionata) &&
                 nonPuoiMangiareTuoiAmici(casellaSelezionata, lastPezzo)) {
                     eseguiMossa(casellaSelezionata, lastPezzo);
@@ -179,7 +232,7 @@ function isLegalMove(casellaSelezionata, lastPezzo, colore) {
                     b = false;
                 }
             break;
-            case "a":
+            case "a": // Regole alfiere
                 if(movimentoObliquo(lastPezzo, casellaSelezionata) &&
                 nonPuoiMangiareTuoiAmici(casellaSelezionata, lastPezzo)) {
                     eseguiMossa(casellaSelezionata, lastPezzo);
@@ -189,7 +242,7 @@ function isLegalMove(casellaSelezionata, lastPezzo, colore) {
                     b = false;
                 }
             break;
-            case "d":
+            case "d": //Regole donna
                 if(movimentoVerticale(lastPezzo, casellaSelezionata) &&
                 nonPuoiMangiareTuoiAmici(casellaSelezionata, lastPezzo)) {
                     eseguiMossa(casellaSelezionata, lastPezzo);
@@ -208,11 +261,134 @@ function isLegalMove(casellaSelezionata, lastPezzo, colore) {
                     b = false;
                 }
             break;
+            case "r": // Regole re
+                if(kingMoovement(casellaSelezionata, lastPezzo) && nonPuoiMangiareTuoiAmici(casellaSelezionata, lastPezzo)) {
+                    eseguiMossa(casellaSelezionata, lastPezzo);
+                    b = true;
+                } else {
+                    click = 0;
+                    b = false;
+                }
+            break;
     }
     return b;
 }
 
-function isCasellaFree(id) {
+// Funzione richiamata per non riscrivere il codice due volte per la funzione "isMenaced"
+function bigSwitch(casellaSelezionata, pez, colore) {
+    let b = false;
+    let pezzo = document.getElementById(pez[1]);
+    switch(pez[0].slice(0, 1)) {
+        case "a":
+        let diagonali = calcolaDiagonaliLibere(pezzo);
+            for(let i = 0; i < diagonali.length; i++) {
+                if (casellaSelezionata.id == diagonali[i]){
+                    b = true;
+                    debugger
+                }
+            }
+        break;
+        case "t":
+            if(movimentoVerticale(pezzo, casellaSelezionata)
+            || movimentoOrizzontale(pezzo, casellaSelezionata)) {
+                b = true;
+                debugger
+            }
+        break;
+        case "d":
+            if(movimentoVerticale(pezzo, casellaSelezionata)
+            || movimentoOrizzontale(pezzo, casellaSelezionata)
+            || movimentoObliquo(pezzo, casellaSelezionata)) {
+                debugger
+                b = true;
+            }
+        break;
+        case "c":
+            if(cavalloMovement(pez, casellaSelezionata)) {
+                b = true;
+                debugger
+            }
+        break;
+        case "p":
+            if(minaccePedone(pez, casellaSelezionata, colore)){
+                b = true;
+                debugger
+            }
+        break;
+        case "r":
+            if(movimentoKing(pez, casellaSelezionata)) {
+                b = true;
+                debugger
+            }
+        break;
+    }
+    return b;
+}
+
+function isMenaced(casellaSelezionata, colore) {  //controlla se la casella è 'minacciata' da qualche pezzo
+    let b = false;
+    if(colore == "B") {
+        for(let pez of mapPezziNeri) {
+            if(bigSwitch(casellaSelezionata, pez, colore)) {
+                b = true;
+            } 
+        }
+    } else {
+        for(let pez of mapPezziBianchi) {
+            if(bigSwitch(casellaSelezionata, pez, colore)) {
+                b = true;
+            } 
+        }
+    }
+    return b;
+}
+
+function movimentoKing(pez, casellaSelezionata) { //le caselle in cui potrebbe andare il re
+    let b = false;
+    let casel = pez[1].slice(0, 1);
+    let n = alfabeto.indexOf(casel);
+    if(parseInt(pez[1].slice(1)) - 1 == parseInt(casellaSelezionata.id.slice(1)) ||
+    parseInt(pez[1].slice(1)) + 1 == parseInt(casellaSelezionata.id.slice(1)) ||
+    parseInt(pez[1].slice(1)) == parseInt(casellaSelezionata.id.slice(1))) {
+        let d = n + 1;
+        let s = n - 1;
+        if(d <= 7 || s >= 0) {
+            if(casellaSelezionata.id.slice(0, 1) == alfabeto[d] || 
+            casellaSelezionata.id.slice(0, 1) == alfabeto[s] ||
+            casellaSelezionata.id.slice(0, 1) == alfabeto[n]) {
+                b = true;
+            }
+        }
+    }
+    return b;
+}
+
+function kingMoovement(casellaSelezionata, lastPezzo) { // Vero movimento del re
+    let i = movimentoKing(fromPezToMap(lastPezzo), casellaSelezionata)
+    let b = false;
+    if(!isMenaced(casellaSelezionata, colorePezzo(lastPezzo)) && movimentoKing(fromPezToMap(lastPezzo), casellaSelezionata)) {
+        b = true;
+    }
+    return b
+}
+
+function fromPezToMap(piece) { //funzione che prende un pezzo in entrata e re
+    let coppia = [];
+    for(let pez of mapPezziBianchi) {
+        if(pez[1] == piece.id) {
+            coppia.push(pez[0]);
+        }
+    }
+    for(let pez of mapPezziNeri) {
+        if(pez[1] == piece.id) {
+            coppia.push(pez[0]);
+        }
+    }
+    coppia.push(piece.id);
+    return coppia;
+}
+
+function isCasellaFree(id) { //controlla se in una casella vi è un pezzo
     let bool = true;
     for(let pez of mapPezziBianchi.values()) {
         if(id == pez) {
@@ -225,6 +401,22 @@ function isCasellaFree(id) {
         }
     }
     return bool;
+}
+
+function cavalloMovement(pez, casellaSelezionata) { 
+    let b = false 
+    let casel = pez[1].slice(0, 1);
+    let n = alfabeto.indexOf(casel);
+    if((parseInt(pez[1].slice(1)) + 2 == parseInt(casellaSelezionata.id.slice(1)) ||
+    parseInt(pez[1].slice(1)) - 2 == parseInt(casellaSelezionata.id.slice(1))) && 
+    (alfabeto[n + 1] == casellaSelezionata.id.slice(0, 1) ||
+    alfabeto[n - 1] == casellaSelezionata.id.slice(0, 1)) ||
+    (alfabeto[n + 2] == casellaSelezionata.id.slice(0, 1) ||
+    alfabeto[n - 2] == casellaSelezionata.id.slice(0, 1)) &&
+    (parseInt(pez[1].slice(1)) + 1 == parseInt(casellaSelezionata.id.slice(1)) ||
+    parseInt(pez[1].slice(1)) - 1 == parseInt(casellaSelezionata.id.slice(1))))
+        b = true;
+    return b;
 }
 
 function movimentoObliquo(piece, nuovoPezzo) {
@@ -321,7 +513,7 @@ function movimentoVerticale(piece, nuovoPezzo) {
     return bool;
 }
 
-function calcolaDiagonaliLibere(piece) {
+function calcolaDiagonaliLibere(piece) { // calcola le diagonali di un pezzo in una determinata posizione
     let array = [];
     let n = alfabeto.indexOf(piece.id.slice(0, 1));
     let aumento = 1;
@@ -376,6 +568,38 @@ function calcolaDiagonaliLibere(piece) {
     return array;
 }
 
+// ritorna true se un pezzo finisce sulle caselle minacciate da un pedone, altrimenti false
+function minaccePedone(piece, casellaSelezionata, colore) { 
+    let b = false;
+    let casel = piece[1].slice(0, 1)
+    let n = alfabeto.indexOf(casel);
+    if(colore == "B") {
+        if(parseInt(piece[1].slice(1)) - 1 == parseInt(casellaSelezionata.id.slice(1))){
+            let d = n + 1;
+            let s = n - 1;
+            if(d <= 7 || s >= 0) {
+                if(casellaSelezionata.id.slice(0, 1) == alfabeto[d] || 
+                casellaSelezionata.id.slice(0, 1) == alfabeto[s]) {
+                    b = true;
+                }
+            }
+        } 
+    } else {
+        if(parseInt(piece[1].slice(1)) + 1 == parseInt(casellaSelezionata.id.slice(1))){
+            let d = n + 1;
+            let s = n - 1;
+            if(d <= 7 || s >= 0) {
+                if(casellaSelezionata.id.slice(0, 1) == alfabeto[d] || 
+                casellaSelezionata.id.slice(0, 1) == alfabeto[s]) {
+                    b = true;
+                }
+            }
+        }
+    }
+    return b;
+}
+
+//esegue la mossa
 function eseguiMossa(newPiece, last) {
     newPiece.innerHTML = last.innerHTML;
     last.innerHTML = "";
@@ -384,7 +608,7 @@ function eseguiMossa(newPiece, last) {
     t++;
 }
 
-function colorePezzo(pezzo) {
+function colorePezzo(pezzo) { // ritorna il colore del pezzo selezionato
     let colore = "nullo";
     for(let pez of mapPezziBianchi.values()) {
         if(pezzo.id == pez) {
@@ -407,8 +631,8 @@ function nonPuoiMangiareTuoiAmici(casellaSelezionata, piece) {
     return b;
 }
 
-function searchPezzo(pezzo, tipo) {
-    let b = false
+function searchPezzo(pezzo, tipo) { // controlla se un è presente un pezzo in una determinata posizione all'interno delle mappe
+    let b = false; 
     switch (tipo) {
         case "all":
             for(let pez of mapPezziBianchi) {
