@@ -59,6 +59,10 @@ body {
     justify-content: center;
 }
 
+.check{
+    background-color: red;
+}
+
 .nero {
     background-color: #0080008a;
     width: 100px;

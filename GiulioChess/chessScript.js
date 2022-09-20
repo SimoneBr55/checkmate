@@ -1,20 +1,20 @@
 let mapPezziBianchi = new Map([
-    ["torreB1", "a1"],
-    ["torreB2", "h1"],
-    ["cavalloB1", "b1"],
-    ["cavalloB2", "g1"],
-    ["alfiereB1", "c1"],
-    ["alfiereB2", "f1"],
-    ["donnaB", "d1"],  
-    ["reB", "e1"],
-    ["pB1", "a2"],
-    ["pB2", "b2"],
-    ["pB3", "c2"],
-    ["pB4", "d2"],
-    ["pB5", "e2"],
-    ["pB6", "f2"],
-    ["pB7", "g2"],
-    ["pB8", "h2"]
+    ["torreB1", "a1"],    
+    ["torreB2", "h1"],    
+    ["cavalloB1", "b1"],  
+    ["cavalloB2", "g1"],  
+    ["alfiereB1", "c1"],  
+    ["alfiereB2", "f1"],  
+    ["donnaB", "d1"],     
+    ["reB", "e1"],        
+    ["pB1", "a2"],        
+    ["pB2", "b2"],        
+    ["pB3", "c2"],       
+    ["pB4", "d2"],        
+    ["pB5", "e2"],        
+    ["pB6", "f2"],        
+    ["pB7", "g2"],       
+    ["pB8", "h2"]   
 ]);
 
 let mapPezziNeri = new Map([
